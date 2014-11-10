@@ -9,13 +9,13 @@ Each publication generated should have its own directory (named after the public
 	* publication-1
 		* publication.xml
 		* fulltext.xml
-** publication-2
-*** publication.xml
-*** fulltext.xml
-** publication-3
-*** publication.xml
-*** fulltext.xml
-	etc...
+	* publication-2
+		* publication.xml
+		* fulltext.xml
+	* publication-3
+		* publication.xml
+		* fulltext.xml
+	* etc...
 
 The structure of each xml file is provided in the associated files here.
 

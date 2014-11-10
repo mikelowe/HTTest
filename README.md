@@ -6,9 +6,9 @@ We need to randomly generate a load of publication metadata and related fulltext
 Each publication generated should have its own directory (named after the publication identifier), and contain two xml files: publication.xml & fulltext.xml
 
 * output
-** publication-1
-*** publication.xml
-*** fulltext.xml
+	* publication-1
+		* publication.xml
+		* fulltext.xml
 ** publication-2
 *** publication.xml
 *** fulltext.xml

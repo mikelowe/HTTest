@@ -45,6 +45,8 @@ public class DataGenerator {
 			//Make image directory
 			String imageDirectory = publicationDirectory + "/images";
 			makeDirectory(imageDirectory);
+			
+			//Generate empty .tif file
 			generateImage(imageDirectory);
 		}
 	}
@@ -226,7 +228,7 @@ public class DataGenerator {
 	}
 	
 	private void generateImage(String imageDirectory) {
-
+	
 		try {
 			File image = new File(imageDirectory + "/image.tif");
 			image.createNewFile();

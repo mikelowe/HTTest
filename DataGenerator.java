@@ -41,6 +41,11 @@ public class DataGenerator {
 			//Generate publication and full text xml files
 			generatePublication(publicationDirectory);
 			generateFullText(publicationDirectory);
+			
+			//Make image directory
+			String imageDirectory = publicationDirectory + "/images";
+			makeDirectory(imageDirectory);
+			generateImage(imageDirectory);
 		}
 	}
 	
@@ -215,6 +220,17 @@ public class DataGenerator {
 		} catch (ParserConfigurationException e) {
 			System.out.println(e.getMessage());
 		} catch (TransformerException e) {
+			System.out.println(e.getMessage());
+		}
+		
+	}
+	
+	private void generateImage(String imageDirectory) {
+
+		try {
+			File image = new File(imageDirectory + "/image.tif");
+			image.createNewFile();
+		} catch (IOException e) {
 			System.out.println(e.getMessage());
 		}
 		

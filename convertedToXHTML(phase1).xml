@@ -1,0 +1,31 @@
+<ciim.metadata.data.SimpleBaseDataMap serialization="custom">
+  <unserializable-parents/>
+  <tree-map>
+    <default/>
+    <int>3</int>
+    <string>completed</string>
+    <boolean>true</boolean>
+    <string>converted files</string>
+    <set>
+      <string>/home/michaellowe/Documents/conversion_agent/eebo_phase1/XML/eebo1-xml-200111/xml-200111/A62869.xml</string>
+      <string>/home/michaellowe/Documents/conversion_agent/eebo_phase1/XML/eebo1-xml-200111/xml-200111/A40550.xml</string>
+      <string>/home/michaellowe/Documents/conversion_agent/eebo_phase1/XML/eebo1-xml-200111/xml-200111/A41736.xml</string>
+      <string>/home/michaellowe/Documents/conversion_agent/eebo_phase1/XML/eebo1-xml-200111/xml-200111/A17870.xml</string>
+      <string>/home/michaellowe/Documents/conversion_agent/eebo_phase1/XML/eebo1-xml-200111/xml-200111/A09659.xml</string>
+      <string>/home/michaellowe/Documents/conversion_agent/eebo_phase1/XML/eebo1-xml-200111/xml-200111/A13422.xml</string>
+      <string>/home/michaellowe/Documents/conversion_agent/eebo_phase1/XML/eebo1-xml-200111/xml-200111/A06173.xml</string>
+      <string>/home/michaellowe/Documents/conversion_agent/eebo_phase1/XML/eebo1-xml-200111/xml-200111/A09086.xml</string>
+      <string>/home/michaellowe/Documents/conversion_agent/eebo_phase1/XML/eebo1-xml-200111/xml-200111/A61130.xml</string>
+    </set>
+    <string>created</string>
+    <ciim.metadata.data.DateDescriptor serialization="custom">
+      <unserializable-parents/>
+      <tree-map>
+        <default/>
+        <int>1</int>
+        <string>date</string>
+        <date>2014-12-12 10:17:01.627 UTC</date>
+      </tree-map>
+    </ciim.metadata.data.DateDescriptor>
+  </tree-map>
+</ciim.metadata.data.SimpleBaseDataMap>

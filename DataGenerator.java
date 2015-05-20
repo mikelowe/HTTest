@@ -1,7 +1,5 @@
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -19,283 +17,318 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-public class DataGenerator {
-
-	private static final String WORKING_DIRECTORY 	= System.getProperty("user.dir");
-	private static final String OUTPUT_DIRECTORY 	= WORKING_DIRECTORY + "/output";
+public class DataGenerator 
+{
+	private final int numberToGenerate;
+	private final String outputDir;
+	private int currentID;
+	private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy");
+	private DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
+	private TransformerFactory transformerFactory = TransformerFactory.newInstance();
 	
-	private int currentIdentifier 		= 0;
-	private int numberOfPublications 	= 0;
-	private SimpleDateFormat formatter 	= new SimpleDateFormat("dd-MM-yyyy");
-		
-	private void generatePublications() {
-		makeDirectory(OUTPUT_DIRECTORY);
-		
-		for(int i = 0; i < numberOfPublications; i++) {
-			generateIdentifier();
-			
-			//Make publication directory
-			String publicationDirectory = OUTPUT_DIRECTORY + "/publication-" + currentIdentifier;
-			makeDirectory(publicationDirectory);
-			
-			//Generate publication and full text xml files
-			generatePublication(publicationDirectory);
-			generateFullText(publicationDirectory);
-			
-			//Make image directory
-			String imageDirectory = publicationDirectory + "/images";
-			makeDirectory(imageDirectory);
-			
-			//Generate empty .tif file
-			generateImage(imageDirectory);
+	public DataGenerator (int numberToGenerate, String outputDir)
+	{
+		this.numberToGenerate = numberToGenerate;
+		this.outputDir = outputDir;
+	}
+	
+	public void generate ()
+	{
+		for (int i = 0; i < numberToGenerate; i++) 
+		{
+			generateID();
+			generatePublicationMetaData();
+			generatePublicationFullText();
+			generatePublicationImage();
 		}
 	}
 	
-	private void makeDirectory(String directory) {
-		
-		try {
-			File dir = new File(directory);
-			if(dir.exists() && !dir.isDirectory()) {
-				Files.delete(Paths.get(directory));
-			}
-			dir.mkdir();
-		} catch (IOException e) {
-			System.out.println(e.getMessage());
+	private void generateID ()
+	{
+		currentID++;
+	}
+	
+	private void generatePublicationMetaData ()
+	{
+		try 
+		{
+			DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();
+			Document document = documentBuilder.newDocument();
+			addPublication(document);
+			File publicationDir = new File(outputDir + File.separator + "publication-" + currentID);
+			publicationDir.mkdirs();
+			File outputFile = new File(publicationDir.getAbsolutePath() + File.separator + "publication.xml");
+			writeDocumentToFile(document, outputFile);
+		} 
+		catch (ParserConfigurationException e) 
+		{
+			System.err.println("ERROR: could not generate publication metadata: " + e.getMessage());
 		}
-		
 	}
 	
-	private int generateIdentifier() {
-		currentIdentifier++;
-		return currentIdentifier;
+	private void addPublication (Document document)
+	{
+		Element publication = document.createElement("publication");
+		document.appendChild(publication);
+		addIdentifier(document, publication);
+		addAuthors(document, publication);
+		addTitle(document, publication);
+		addSubjects(document, publication);
 	}
-
-	private void generatePublication(String publicationDirectory) {
 	
-		try {
-			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder docBuilder;
-			docBuilder = docFactory.newDocumentBuilder();
-			
-			Document document = docBuilder.newDocument();
-			
-			//Add publication element
-			Element publication = document.createElement("publication");
-			document.appendChild(publication);
-			
-			//Add identifier element
-			Element identifier = document.createElement("identifier");
-			//Get identifier
-			identifier.appendChild(document.createTextNode(Integer.toString(currentIdentifier)));
-			publication.appendChild(identifier);
-			
-			//Add authors element
-			Element authors = document.createElement("authors");
-			//Get authors
-			int numberOfAuthors = getRandomNumber(1,5);
-			for (int i = 0; i < numberOfAuthors; i++) {
-				Element author = document.createElement("author");
-				
-				//Add author name
-				Element authorName = document.createElement("authorname");
-				String name = getRandomText(getRandomNumber(1,30));
-				authorName.appendChild(document.createTextNode(name));
-				author.appendChild(authorName);
-				
-				//Add dob
-				Element dob = document.createElement("dob");
-				String date = formatter.format(getRandomDate());
-				dob.appendChild(document.createTextNode(date));
-				author.appendChild(dob);
-				
-				authors.appendChild(author);
-			}
-			publication.appendChild(authors);
-			
-			//Add title element
-			Element title = document.createElement("title");
-			Element shortTitle = document.createElement("shorttitle");
-			title.appendChild(shortTitle);
-			Element longTitle = document.createElement("longtitle");
-			title.appendChild(longTitle);
-			
-			//Get random long title
-			String longTitleStr = getRandomText(getRandomNumber(10, 100));
-			longTitle.appendChild(document.createTextNode(longTitleStr));
-			
-			//Get short title from substring of long title
-			int shortTitleLength = getRandomNumber(1, 10);
-			String shortTitleStr = longTitleStr.substring(0, shortTitleLength);
-			shortTitle.appendChild(document.createTextNode(shortTitleStr));
-			publication.appendChild(title);
-			
-			//Add subjects element
-			Element subjects = document.createElement("subjects");
-			//Get subjects
-			int numberOfSubjects = getRandomNumber(1,10);
-			for (int i = 0; i < numberOfSubjects; i++) {
-				//Get random subject name
-				Element subject = document.createElement("subject");
-				subject.appendChild(document.createTextNode(getRandomText(getRandomNumber(1, 15))));
-				
-				subjects.appendChild(subject);
-			}
-			publication.appendChild(subjects);
-			
-			//Write content into xml file
-			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+	private void addIdentifier (Document document, Element publication)
+	{
+		Element identifier = document.createElement("identifier");
+		identifier.appendChild(document.createTextNode(Integer.toString(currentID)));
+		publication.appendChild(identifier);
+	}
+	
+	private void addAuthors (Document document, Element publication)
+	{
+		Element authors = document.createElement("authors");
+		int numberOfAuthors = getRandomNumber(1, 5);
+		for (int i = 0; i < numberOfAuthors; i++) 
+		{
+			Element author = document.createElement("author");
+			addAuthorName(document, author);
+			addAuthorDOB(document, author);
+			authors.appendChild(author);
+		}
+		publication.appendChild(authors);
+	}
+	
+	private void addAuthorName (Document document, Element author)
+	{
+		Element authorName = document.createElement("authorname");
+		String name = getRandomText(getRandomNumber(1, 30));
+		authorName.appendChild(document.createTextNode(name));
+		author.appendChild(authorName);
+	}
+	
+	private void addAuthorDOB (Document document, Element author)
+	{
+		Element dob = document.createElement("dob");
+		String date = dateFormatter.format(getRandomDate());
+		dob.appendChild(document.createTextNode(date));
+		author.appendChild(dob);
+	}
+	
+	private void addTitle (Document document, Element publication)
+	{
+		Element title = document.createElement("title");
+		addLongTitle(document, title);
+		addShortTitle(document, title);
+		publication.appendChild(title);
+	}
+	
+	private void addLongTitle (Document document, Element title)
+	{
+		Element longTitle = document.createElement("longtitle");
+		String longTitleStr = getRandomText(getRandomNumber(10, 100));
+		longTitle.appendChild(document.createTextNode(longTitleStr));
+		title.appendChild(longTitle);
+	}
+	
+	private void addShortTitle (Document document, Element title)
+	{
+		Element shortTitle = document.createElement("shorttitle");
+		String shortTitleStr = getRandomText(getRandomNumber(10, 10));
+		shortTitle.appendChild(document.createTextNode(shortTitleStr));
+		title.appendChild(shortTitle);
+	}
+	
+	private void addSubjects (Document document, Element publication)
+	{
+		Element subjects = document.createElement("subjects");
+		int numberOfSubjects = getRandomNumber(1, 10);
+		for (int i = 0; i < numberOfSubjects; i++) 
+			addSubject(document, subjects);
+		publication.appendChild(subjects);
+	}
+	
+	private void addSubject (Document document, Element subjects)
+	{
+		Element subject = document.createElement("subject");
+		subject.appendChild(document.createTextNode(getRandomText(getRandomNumber(1, 15))));	
+		subjects.appendChild(subject);
+	}
+	
+	private void writeDocumentToFile (Document document, File outputFile)
+	{
+		try 
+		{
 			Transformer transformer = transformerFactory.newTransformer();
 			DOMSource source = new DOMSource(document);
-
-			StreamResult result =  new StreamResult(new File(publicationDirectory + "/publication.xml"));
+			StreamResult result =  new StreamResult(outputFile);
 			transformer.transform(source, result);
-			
-		} catch (ParserConfigurationException e) {
-			System.out.println(e.getMessage());
-		} catch (TransformerException e) {
-			System.out.println(e.getMessage());
+		} 
+		catch (TransformerException e) 
+		{	
+			System.err.println("ERROR: could not write document to file: " + e.getMessage());
 		}
-		
 	}
 	
-	private void generateFullText(String publicationDirectory) {
-		
-		try {
-			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder docBuilder;
-			docBuilder = docFactory.newDocumentBuilder();
-			
-			Document document = docBuilder.newDocument();
-			
-			//Add pages element
-			Element pages = document.createElement("pages");
-			document.appendChild(pages);
-			
-			//Add pages
-			int numberOfPages = getRandomNumber(1,1000);
-			//Get starting page number
-			int pageNumber = getRandomNumber(1, numberOfPages);
-			for (int i = 0; i < numberOfPages; i++) {
-				Element page = document.createElement("page");
-				
-				//Add page number
-				page.setAttribute("number", Integer.toString(pageNumber));
-				pageNumber++;
-				
-				//Add sequence number
-				page.setAttribute("sequence", Integer.toString(i + 1));
-				
-				//Add text element
-				Element text = document.createElement("text");
-				
-				//Add word elements
-				int numberOfWords = getRandomNumber(100, 200);
-				for (int j = 0; j < numberOfWords; j++) {
-					Element word = document.createElement("word");
-					
-					//Add random coordinates
-					int coord1 = getRandomNumber(1,300);
-					int coord2 = getRandomNumber(1,300);
-					int coord3 = getRandomNumber(1,300);
-					int coord4 = getRandomNumber(1,300);
-					String coords = coord1 + "," + coord2 + "," + coord3 + "," + coord4;
-					word.setAttribute("coords", coords);
-					
-					//Add random word
-					String wordStr = getRandomText(getRandomNumber(1,15));
-					word.appendChild(document.createTextNode(wordStr));
-					text.appendChild(word);
-				}
-				
-				page.appendChild(text);
-				pages.appendChild(page);
-			}
-			
-			//Write the content into xml file
-			TransformerFactory transformerFactory = TransformerFactory.newInstance();
-			Transformer transformer = transformerFactory.newTransformer();
-			DOMSource source = new DOMSource(document);
-
-			StreamResult result =  new StreamResult(new File(publicationDirectory + "/fulltext.xml"));
-			transformer.transform(source, result);
-			
-		} catch (ParserConfigurationException e) {
-			System.out.println(e.getMessage());
-		} catch (TransformerException e) {
-			System.out.println(e.getMessage());
+	private void generatePublicationFullText ()
+	{
+		try 
+		{
+			DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();
+			Document document = documentBuilder.newDocument();
+			addPages(document);
+			File publicationDir = new File(outputDir + File.separator + "publication-" + currentID);
+			publicationDir.mkdirs();
+			File outputFile = new File(publicationDir.getAbsolutePath() + File.separator + "fulltext.xml");
+			writeDocumentToFile(document, outputFile);
+		} 
+		catch (ParserConfigurationException e) 
+		{
+			System.err.println("ERROR: could not generate publication full text: " + e.getMessage());
 		}
-		
 	}
 	
-	private void generateImage(String imageDirectory) {
+	private void addPages (Document document)
+	{
+		Element pages = document.createElement("pages");
+		document.appendChild(pages);
+		int numberOfPages = getRandomNumber(1, 1000);
+		int pageNumber = getRandomNumber(1, numberOfPages);
+		for (int i = 0; i < numberOfPages; i++) 
+		{
+			addPage(document, pages, pageNumber, i + 1);
+			pageNumber++;
+		}
+	}
 	
-		try {
-			File image = new File(imageDirectory + "/image.tif");
+	private void addPage (Document document, Element pages, int pageNumber, int sequenceNumber)
+	{
+		Element page = document.createElement("page");
+		page.setAttribute("number", Integer.toString(pageNumber));
+		page.setAttribute("sequence", Integer.toString(sequenceNumber));
+		addText(document, page);
+		pages.appendChild(page);
+	}
+	
+	private void addText (Document document, Element page)
+	{
+		Element text = document.createElement("text");
+		int numberOfWords = getRandomNumber(100, 200);
+		for (int j = 0; j < numberOfWords; j++) 
+			addWord(document, text);
+		page.appendChild(text);
+	}
+	
+	private void addWord (Document document, Element text)
+	{
+		Element word = document.createElement("word");
+		word.setAttribute("coords", getRandomCoordinates());
+		String wordStr = getRandomText(getRandomNumber(1,15));
+		word.appendChild(document.createTextNode(wordStr));
+		text.appendChild(word);
+	}
+	
+	private String getRandomCoordinates ()
+	{
+		int coord1 = getRandomNumber(1,300);
+		int coord2 = getRandomNumber(1,300);
+		int coord3 = getRandomNumber(1,300);
+		int coord4 = getRandomNumber(1,300);
+		return coord1 + "," + coord2 + "," + coord3 + "," + coord4;
+	}
+	
+	private void generatePublicationImage ()
+	{
+		try 
+		{
+			File imageDir = new File(outputDir + File.separator + "publication-" + currentID + File.separator + "images");
+			imageDir.mkdirs();
+			File image = new File(imageDir.getAbsolutePath() + File.separator + currentID + ".tif");
 			image.createNewFile();
-		} catch (IOException e) {
-			System.out.println(e.getMessage());
+		} 
+		catch (IOException e) 
+		{
+			System.err.println("ERROR: could not generate publication image: " + e.getMessage());
 		}
-		
 	}
 	
-	private String getRandomText(int length) {
+	private String getRandomText (int length) 
+	{
 		StringBuilder randomText = new StringBuilder();
-		for(int i = 0; i < length; i++) {
+		for(int i = 0; i < length; i++)
 			randomText.append(getRandomChar());
-		}
 		return randomText.toString();
 	}
 	
-	private char getRandomChar() {
-		int number = getRandomNumber(32,126); //ASCII code range
+	private char getRandomChar () 
+	{
+		int number = getRandomNumber(33, 126);
 		char randomChar = (char) number;
 		return randomChar;
 	}
 	
-	private int getRandomNumber(int min, int max) {  
+	private int getRandomNumber (int min, int max) 
+	{  
 		int randomNumber = (int) (Math.random() * (max + 1 - min)) + min;
 		return randomNumber;
 	}
 	
-	private Date getRandomDate() {
-		
-	    try {
-			int day 	= getRandomNumber(1,31);
-			int month 	= getRandomNumber(1,12);
-			int year 	= getRandomNumber(1000,2000);
-			Date date 	= formatter.parse(day + "-" + month + "-" + year);
-			
+	private Date getRandomDate () 
+	{
+	    try 
+	    {
+			int day = getRandomNumber(1,31);
+			int month = getRandomNumber(1,12);
+			int year = getRandomNumber(1000,2000);
+			Date date = dateFormatter.parse(day + "-" + month + "-" + year);
 		    return date;
-		    
-		} catch (ParseException e) {
-			System.out.println(e.getMessage());
+		} 
+	    catch (ParseException e) 
+	    {
+			System.err.println("ERROR: could not create random date: " + e.getMessage());
 			return null;
 		} 
-	    
 	}
 	
-	private void getUserInput() {
-	    Scanner scanner = new Scanner(System.in);
-	    int input;
-	    
-	    do {
-		    System.out.println("Enter number of publications to generate: ");
-		    while (!scanner.hasNextInt()) {
-		    	System.out.println("Enter a positive number: ");
+	private static int getNumberToGenerate (Scanner scanner)
+	{
+	    int numberToGenerate;
+	    do 
+	    {
+		    System.out.println("Enter a positive number of publications to generate: ");
+		    while (!scanner.hasNextInt()) 
+		    {
+		    	System.out.println("Not a number");
 		        scanner.next();
 		    }
-		    input = scanner.nextInt();
-	    } while(input < 0);
-	    
-	    numberOfPublications = input;
-	    scanner.close();
+		    numberToGenerate = scanner.nextInt();
+	    } while (numberToGenerate < 0);
+		return numberToGenerate;
 	}
 	
-	public static void main(String[] args) {
-		DataGenerator dg = new DataGenerator();
-		dg.getUserInput();
-		dg.generatePublications();
-		System.out.println("Done");
+	private static String getOutputDir (Scanner scanner)
+	{
+		String outputDir = null;
+		do
+		{
+		    System.out.println("Enter path to output directory: ");
+		    outputDir = scanner.next();
+		} while (!isValidDir(outputDir));
+		return outputDir;
 	}
 	
+	private static boolean isValidDir (String dir)
+	{
+		File file = new File(dir);
+		return file.isDirectory();
+	}
+	
+	public static void main (String[] args) 
+	{
+		Scanner scanner = new Scanner(System.in);
+		int numberToGenerate = getNumberToGenerate(scanner);
+		String outputDir = getOutputDir(scanner);
+		scanner.close();
+		DataGenerator dataGenerator = new DataGenerator(numberToGenerate, outputDir);
+		dataGenerator.generate();
+		System.out.println("Done!");
+	}
 }
